@@ -216,3 +216,6 @@ __marimo__/
 *.svg
 *.ico
 *.webp
+
+# Intermediate files for various IDEs and tools
+trained_model_1epoch/

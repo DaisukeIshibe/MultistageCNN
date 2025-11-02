@@ -200,7 +200,7 @@ class MultiStageCNN(keras.Model):
         # 2段目の実行 / Execute Stage 2
         stage2_outputs = {}
         for i in range(10):
-            stage2_outputs[i] = self.stage2_models[f'category_{i}'](inputs, training=training)
+            stage2_outputs[f'category_{i}'] = self.stage2_models[f'category_{i}'](inputs, training=training)
         
         return stage1_output, stage2_outputs
     
@@ -296,7 +296,7 @@ def create_multistage_loss():
             category_labels = tf.concat([1 - category_correct, category_correct], axis=-1)
             
             # カテゴリiの2段目損失
-            category_loss = keras.losses.categorical_crossentropy(category_labels, stage2_outputs[i])
+            category_loss = keras.losses.categorical_crossentropy(category_labels, stage2_outputs[f'category_{i}'])
             stage2_loss += category_loss
         
         # 総損失（重み付き和）
@@ -333,7 +333,7 @@ def predict_final_categories(model: MultiStageCNN, x_data: np.ndarray, threshold
         predicted_category = stage1_pred[i]
         
         # 該当カテゴリの2段目モデルで正誤判定 / Judge correctness with Stage 2 model for the category
-        stage2_confidence = stage2_outputs[predicted_category][i, 1]  # 正解の確率 / Probability of correctness
+        stage2_confidence = stage2_outputs[f'category_{predicted_category}'][i, 1]  # 正解の確率 / Probability of correctness
         
         if stage2_confidence >= threshold:
             # 信頼度が閾値以上なら、1段目の予測を採用 / Adopt Stage 1 prediction if confidence >= threshold
@@ -430,7 +430,7 @@ def train_model(model: MultiStageCNN,
                     category_incorrect = 1 - category_correct
                     category_labels = tf.stack([category_incorrect, category_correct], axis=-1)
                     
-                    category_loss = keras.losses.categorical_crossentropy(category_labels, stage2_outputs[i])
+                    category_loss = keras.losses.categorical_crossentropy(category_labels, stage2_outputs[f'category_{i}'])
                     stage2_loss += tf.reduce_mean(category_loss)
                 
                 total_loss = stage1_loss + 0.3 * stage2_loss
@@ -454,7 +454,7 @@ def train_model(model: MultiStageCNN,
             val_category_incorrect = 1 - val_category_correct
             val_category_labels = tf.stack([val_category_incorrect, val_category_correct], axis=-1)
             
-            val_category_loss = keras.losses.categorical_crossentropy(val_category_labels, val_stage2_outputs[i])
+            val_category_loss = keras.losses.categorical_crossentropy(val_category_labels, val_stage2_outputs[f'category_{i}'])
             val_stage2_loss += tf.reduce_mean(val_category_loss)
         
         val_total_loss = val_stage1_loss + 0.3 * val_stage2_loss
