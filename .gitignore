@@ -218,4 +218,5 @@ __marimo__/
 *.webp
 
 # Intermediate files for various IDEs and tools
-trained_model_1epoch/
+trained_model_*/
+inference_results_*/
